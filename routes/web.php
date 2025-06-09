@@ -13,7 +13,7 @@ use App\Http\Controllers\FamilyMemberController; // Import the FamilyMemberContr
 use App\Http\Controllers\HomeController; // Import the HomeController class
 use App\Http\Controllers\Auth\AdminRegisterController;
 use App\Http\Controllers\LogController; // Import the LogController class
-
+use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -38,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
 
     //fetching social worker
     Route::get('/social-worker', [ClientController::class, 'caselist'])->name('social-worker.index');
+    Route::post('/duplicate-client/{id}', [ClientController::class, 'duplicateClient']);
 
     Route::get('/social-worker/{clientId}', [ClientController::class, 'show'])->name('social-worker.index')->middleware('social');
     // generate pdf
@@ -54,6 +55,8 @@ Route::middleware(['auth'])->group(function () {
     // web.php
     Route::get('/view-closed-clients', [ClientController::class, 'viewClosedClients'])->name('social-worker.view-closed-clients');
     Route::get('/view-ongoing-clients', [ClientController::class, 'viewOngoingClients'])->name('social-worker.view-ongoing-clients');
+
+    Route::get('/view-applicants', [ClientController::class, 'viewApplicants'])->name('social-worker.view-applicants');
 
 
     //for family members
@@ -77,6 +80,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/social-worker/edit/{id}', [App\Http\Controllers\SocialWorkerController::class, 'edit'])->name('social-worker.edit')->middleware('social-worker');
     Route::put('/social-worker/update/{id}', [App\Http\Controllers\SocialWorkerController::class, 'update'])->name('social-worker.update')->middleware('social-worker');
     Route::delete('/social-worker/delete/{id}', [App\Http\Controllers\SocialWorkerController::class, 'destroy'])->name('social-worker.delete')->middleware('social-worker');
+
+    //reports section
+    Route::resource('reports', ReportController::class);
+    Route::patch('reports/{report}/archive', [ReportController::class, 'archive'])->name('reports.archive');
+    Route::get('reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
+    Route::get('/generate-pdf-report', [HomeController::class, 'generatePDF'])->name('generate.pdf');
+
+    Route::get('reports/{report}', [ReportController::class, 'show'])->name('reports.show');
 
     // managing admin account
     Route::get('/admin', [SocialWorkerAccountController::class, 'index'])

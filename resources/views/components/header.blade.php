@@ -2,14 +2,14 @@
 <div class="navbar-bg"></div>
 <nav class="navbar navbar-expand-lg main-navbar">
     <!-- Left-aligned Hamburger Menu -->
-    <a href="#" data-toggle="sidebar" class="nav-link nav-link-lg mr-auto">
+    <a href="#" data-toggle="sidebar" class="nav-link nav-link-lg my-auto">
         <i class="fas fa-bars"></i>
     </a>
 
     <!-- Right-aligned User Greeting -->
     <ul class="navbar-nav ml-auto">
         <li class="dropdown">
-            <a href="#" data-toggle="dropdown" class="nav-link dropdown-toggle nav-link-lg nav-link-user">
+            <a href="#" data-toggle="dropdown" class="nav-link dropdown-toggle nav-link-lg nav-link-user mr-3">
                 <img alt="image" src="{{ asset('img/avatar/avatar-1.png') }}" class="rounded-circle mr-1">
                 <div class="d-sm-none d-lg-inline-block">
                     Hi, {{ auth()->check() ? substr(auth()->user()->firstname, 0, 10) : 'Tamu' }}

@@ -16,6 +16,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+
+    <!-- Font Awesome (optional for icons) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons (optional for icons like 'fas fa-download') -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom CSS (optional, if you have your own styles) -->
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
     <title>@yield('title') CSWDO - RMS</title>
 
@@ -29,19 +47,26 @@
 
 <body>
     <div id="app">
-        <div class="main-wrapper">
+        <div class="main-wrapper d-flex">
             <!-- Header -->
             @include('components.header')
 
-            <!-- Sidebar -->
-            @include('components.sidebar')
+            <div class="container-fluid col-md-10 mx-auto">
+                <!-- Sidebar -->
+                <div class="col-md-1">
+                    @include('components.sidebar')
+                </div>
 
-            <!-- Content -->
-            @yield('content')
+                <!-- Content -->
+                <div class="col-md-10 mx-auto">
+                    @yield('content')
+                </div>
+                
 
-            <!-- Footer --> @unless(request()->is('login') || request()->is('register') || request()->is('password/reset'))
-
-            @include('components.admin-footer')
+                <!-- Footer --> @unless(request()->is('login') || request()->is('register') || request()->is('password/reset'))
+                
+                @include('components.admin-footer')
+            </div>
             @endunless
 
 
@@ -60,6 +85,7 @@
     <script src="{{ asset('js/custom.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-linear-regression"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
 
 
     @stack('scripts')

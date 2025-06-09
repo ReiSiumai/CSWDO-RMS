@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use App\Models\Client;
 use App\Models\FamilyMember;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Exception\RequestException;
@@ -88,7 +91,7 @@ class ClientController extends Controller
 
     public function viewClosedClients()
     {
-        $clients = Client::where('tracking', 'Approve')->get();
+        $clients = Client::where('tracking', 'Approve')->orderBy('created_at', 'desc')->get();
         return view('layouts.social-worker.view-closed-clients', compact('clients'));
     }
     public function viewOngoingClients()
@@ -132,8 +135,11 @@ class ClientController extends Controller
             $nextNumber = '0000001';
         }
 
-        $controlNumber = "APL " . $nextNumber;
-        $validatedData['control_number'] = $controlNumber;
+        // date today format it like YYYYMM
+        $dateToday = date('Ym');
+
+        $newControlNumber = 'CS-' . $dateToday . strtoupper(Str::random(6));
+        $validatedData['control_number'] = $newControlNumber;
 
         // Handle optional fields for nationality and religion
         if ($request->input('nationality') === 'Other') {
@@ -151,16 +157,29 @@ class ClientController extends Controller
         // Create the client record
         $client = Client::create($validatedData);
 
+        $create_user = User::create([
+            'firstname' => $client->first_name,
+            'lastname' => $client->last_name,
+            'email' => $client->first_name . '.' . $client->last_name . '@gmail.com',
+            'password' => bcrypt('password'),
+            'role' => 'applicant',
+            'barangay' => $client->barangay,
+            'middle_name' => $client->middle_name,
+            'age'   => $client->age,
+            'contact' => $client->contact_number,
+            'birthday' => $client->date_of_birth,
+        ]);
+
         return response()->json([
             'message' => 'Form submitted successfully!',
-            'control_number' => $controlNumber,
+            'control_number' => $newControlNumber,
         ]);
     }
 
 
     public function caselist()
     {
-        $clients = Client::where('tracking', 'Re-access')->get();
+        $clients = Client::where('tracking', 'Re-access')->orderBy('created_at', 'desc')->get();
         $user = Auth::user(); // Get the currently authenticated user
         return view('layouts.social-worker.index', compact('clients', 'user'));
     }
@@ -418,8 +437,8 @@ class ClientController extends Controller
     {
         $date = \Carbon\Carbon::now()->format('F j, Y');
         $apiKey = config('semaphore.api_key', env('SEMAPHORE_API_KEY'));
-        $message = "Magandang araw, $firstName $lastName! Pwede na po kayong pumunta sa CSWDO simula sa $date para kunin ang inyong hinihinging tulong. Maaring magdala ng kahit anong valid ID. Narito ang address ng CSWDO Taguig: 
-             \nCSWDO Taguig, 2nd Floor, Taguig City Hall, Brgy. Pinagsama, Taguig City. 
+        $message = "Magandang araw, $firstName $lastName! Pwede na po kayong pumunta sa CSWDO simula sa $date para kunin ang inyong hinihinging tulong. Maaring magdala ng kahit anong valid ID. Narito ang address ng CSWDO Taguig:
+             \nCSWDO Taguig, 2nd Floor, Taguig City Hall, Brgy. Pinagsama, Taguig City.
              \nMaraming salamat.";
         $senderName = 'CSWDORMS';
 
@@ -448,31 +467,6 @@ class ClientController extends Controller
             Log::error('Request Exception: ' . $e->getMessage());
         }
     }
-
-
-    /*     private function checkDeliveryStatus($messageId)
-    {
-        $apiKey = env('SEMAPHORE_API_KEY');
-
-        $ch = curl_init();
-        $parameters = [
-            'apikey' => $apiKey,
-        ];
-
-        curl_setopt($ch, CURLOPT_URL, 'https://semaphore.co/api/v4/messages/' . $messageId . '?' . http_build_query($parameters));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $output = curl_exec($ch);
-        if (curl_errno($ch)) {
-            Log::error('cURL error: ' . curl_error($ch));
-        } else {
-            Log::info('Semaphore delivery status response: ' . $output);
-        }
-
-        curl_close($ch);
-
-        return json_decode($output, true);
-    } */
 
 
     public function destroy(Client $client)
@@ -540,5 +534,93 @@ class ClientController extends Controller
             return view('dataentry', compact('clients'));
         }
         return view('dataentry', compact('clients'));
+    }
+
+    public function duplicateClient($id)
+    {
+        try {
+            // Start a database transaction
+            DB::beginTransaction();
+
+            // Fetch the existing client record
+            $client = DB::table('clients')->find($id);
+            if (!$client) {
+                return response()->json(['success' => false, 'message' => 'Client not found.']);
+            }
+
+            // date today format it like YYYYMM
+            $dateToday = date('Ym');
+
+            // Generate a new control number and new client ID
+            $newControlNumber = 'CS-' . $dateToday . strtoupper(Str::random(6));
+
+            // Insert the duplicated client record into the clients table
+            $newClientId = DB::table('clients')->insertGetId([
+                'first_name' => $client->first_name,
+                'last_name' => $client->last_name,
+                'middle' => $client->middle,
+                'suffix' => $client->suffix,
+                'address' => $client->address,
+                'age' => $client->age,
+                'date_of_birth' => $client->date_of_birth,
+                'pob' => $client->pob,
+                'sex' => $client->sex,
+                'nationality' => $client->nationality,
+                'educational_attainment' => $client->educational_attainment,
+                'civil_status' => $client->civil_status,
+                'religion' => $client->religion,
+                'occupation' => $client->occupation,
+                'monthly_income' => $client->monthly_income,
+                'contact_number' => $client->contact_number,
+                'control_number' => $newControlNumber,
+                'source_of_referral' => $client->source_of_referral,
+                'circumstances_of_referral' => $client->circumstances_of_referral,
+                'family_background' => $client->family_background,
+                'health_history' => $client->health_history,
+                'economic_situation' => $client->economic_situation,
+                'house_structure' => $client->house_structure,
+                'floor' => $client->floor,
+                'type' => $client->type,
+                'number_of_rooms' => $client->number_of_rooms,
+                'appliances' => $client->appliances,
+                'other_appliances' => $client->other_appliances,
+                'monthly_expenses' => $client->monthly_expenses,
+                'tracking' => "Re-access",
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Fetch family members associated with the original client
+            $familyMembers = DB::table('family_members')->where('client_id', $id)->get();
+
+            // Duplicate family members and associate them with the new client ID
+            foreach ($familyMembers as $familyMember) {
+                DB::table('family_members')->insert([
+                    'client_id' => $newClientId,
+                    'fam_firstname' => $familyMember->fam_firstname,
+                    'fam_lastname' => $familyMember->fam_lastname,
+                    'fam_middlename' => $familyMember->fam_middlename,
+                    'fam_relationship' => $familyMember->fam_relationship,
+                    'fam_birthday' => $familyMember->fam_birthday,
+                    'fam_age' => $familyMember->fam_age,
+                    'fam_gender' => $familyMember->fam_gender,
+                    'fam_status' => $familyMember->fam_status,
+                    'fam_education' => $familyMember->fam_education,
+                    'fam_occupation' => $familyMember->fam_occupation,
+                    'fam_income' => $familyMember->fam_income,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Commit the transaction
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Client record duplicated successfully.']);
+        } catch (\Exception $e) {
+            // Rollback the transaction if an error occurs
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'An error occurred: ' . $e->getMessage()]);
+        }
     }
 }

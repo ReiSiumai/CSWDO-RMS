@@ -3556,10 +3556,10 @@ body.layout-2 .main-sidebar .sidebar-menu li.active ul.dropdown-menu a {
     background-color: transparent;
 }
 body.layout-2 .main-content {
-    padding-top: 107px;
+    /* padding-top: 107px;
     padding-left: 30px;
     padding-right: 0;
-    width: calc(100% - 200px);
+    width: calc(100% - 200px); */
 }
 body.layout-2 .main-footer {
     margin-left: 230px;
@@ -3900,10 +3900,10 @@ body.layout-3 .main-footer {
 }
 
 .main-content {
-    padding-left: 280px;
-    padding-right: 30px;
+    /* padding-left: 280px;
+    padding-right: 30px; */
     padding-top: 80px;
-    width: 100%;
+    width: auto;
     position: relative;
 }
 
